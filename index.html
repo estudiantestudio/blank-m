@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#173f35" />
+  <meta name="description" content="Black Hold: organización académica, estudio, tareas y progreso." />
+  <title>Black Hold</title>
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-logo">BH</div>
+        <div>
+          <h1>Black Hold</h1>
+          <p>Academic Control</p>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-link active" data-section="dashboard">🏠 Inicio</button>
+        <button class="nav-link" data-section="planner">📅 Planificador</button>
+        <button class="nav-link" data-section="subjects">📚 Materias</button>
+        <button class="nav-link" data-section="study">⏱️ Estudio</button>
+        <button class="nav-link" data-section="reviews">🔁 Repasos</button>
+        <button class="nav-link" data-section="exams">🎯 Exámenes</button>
+        <button class="nav-link" data-section="habits">💪 Hábitos</button>
+        <button class="nav-link" data-section="stats">📊 Estadísticas</button>
+        <button class="nav-link" data-section="settings">⚙️ Configuración</button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <p id="streakText">🔥 Racha: 0 días</p>
+        <button id="themeToggle" class="secondary-btn">🌙 Modo oscuro</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <button id="menuBtn" class="icon-btn mobile-only" aria-label="Abrir menú">☰</button>
+        <div>
+          <p class="eyebrow" id="todayLabel"></p>
+          <h2 id="pageTitle">Panel principal</h2>
+        </div>
+        <button id="quickStudyBtn" class="primary-btn">▶ Estudiar ahora</button>
+      </header>
+
+      <section id="dashboard" class="page-section active">
+        <div class="hero-card">
+          <div>
+            <p class="eyebrow">Tu centro de control académico</p>
+            <h3 id="welcomeTitle">Hola 👋</h3>
+            <p id="motivationText">Cada sesión de estudio cuenta.</p>
+          </div>
+          <div class="hero-progress">
+            <div class="progress-ring" id="dailyProgressRing">
+              <span id="dailyProgressValue">0%</span>
+            </div>
+            <small>Meta diaria</small>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat-card">
+            <span>⏱️</span>
+            <div><strong id="todayMinutes">0 min</strong><small>Estudiado hoy</small></div>
+          </article>
+          <article class="stat-card">
+            <span>✅</span>
+            <div><strong id="completedTasks">0</strong><small>Tareas completadas</small></div>
+          </article>
+          <article class="stat-card">
+            <span>🎯</span>
+            <div><strong id="upcomingExamCount">0</strong><small>Exámenes próximos</small></div>
+          </article>
+          <article class="stat-card">
+            <span>🔥</span>
+            <div><strong id="dashboardStreak">0 días</strong><small>Racha de estudio</small></div>
+          </article>
+        </div>
+
+        <div class="two-column">
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Hoy</p>
+                <h3>Próximas tareas</h3>
+              </div>
+              <button class="text-btn" data-go="planner">Ver todas</button>
+            </div>
+            <div id="dashboardTasks" class="list"></div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Preparación</p>
+                <h3>Próximos exámenes</h3>
+              </div>
+              <button class="text-btn" data-go="exams">Gestionar</button>
+            </div>
+            <div id="dashboardExams" class="list"></div>
+          </article>
+        </div>
+
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Semana actual</p>
+              <h3>Tiempo por materia</h3>
+            </div>
+          </div>
+          <div id="dashboardSubjectBars" class="bars"></div>
+        </article>
+      </section>
+
+      <section id="planner" class="page-section">
+        <div class="section-grid">
+          <article class="panel">
+            <h3>Agregar tarea</h3>
+            <form id="taskForm" class="form-grid">
+              <label>Título<input id="taskTitle" required placeholder="Ej.: Guía de física" /></label>
+              <label>Materia<select id="taskSubject"></select></label>
+              <label>Fecha<input id="taskDate" type="date" required /></label>
+              <label>Prioridad
+                <select id="taskPriority">
+                  <option value="alta">Alta</option>
+                  <option value="media" selected>Media</option>
+                  <option value="baja">Baja</option>
+                </select>
+              </label>
+              <button class="primary-btn full-width" type="submit">Agregar tarea</button>
+            </form>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <h3>Mis tareas</h3>
+              <select id="taskFilter">
+                <option value="all">Todas</option>
+                <option value="pending">Pendientes</option>
+                <option value="done">Terminadas</option>
+              </select>
+            </div>
+            <div id="taskList" class="list"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="subjects" class="page-section">
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Organización académica</p>
+              <h3>Materias</h3>
+            </div>
+          </div>
+          <form id="subjectForm" class="inline-form">
+            <input id="subjectName" required placeholder="Nueva materia" />
+            <input id="subjectGoal" type="number" min="1" value="300" placeholder="Meta semanal (min)" />
+            <button class="primary-btn" type="submit">Agregar</button>
+          </form>
+          <div id="subjectGrid" class="subject-grid"></div>
+        </div>
+      </section>
+
+      <section id="study" class="page-section">
+        <div class="timer-layout">
+          <article class="panel timer-card">
+            <p class="eyebrow">Sesión libre</p>
+            <h3>Cronómetro de estudio</h3>
+            <select id="timerSubject"></select>
+            <input id="timerTopic" placeholder="Tema: MRUA, elasticidad, álgebra..." />
+            <div id="stopwatchDisplay" class="timer-display">00:00:00</div>
+            <div class="timer-actions">
+              <button id="startStopwatch" class="primary-btn">Iniciar</button>
+              <button id="pauseStopwatch" class="secondary-btn">Pausar</button>
+              <button id="finishStopwatch" class="danger-btn">Finalizar y guardar</button>
+            </div>
+          </article>
+
+          <article class="panel timer-card">
+            <p class="eyebrow">Concentración</p>
+            <h3>Pomodoro</h3>
+            <div class="preset-row">
+              <button class="chip active" data-work="25" data-break="5">25/5</button>
+              <button class="chip" data-work="50" data-break="10">50/10</button>
+              <button class="chip" data-work="90" data-break="20">90/20</button>
+            </div>
+            <div id="pomodoroMode">Tiempo de estudio</div>
+            <div id="pomodoroDisplay" class="timer-display">25:00</div>
+            <div class="timer-actions">
+              <button id="startPomodoro" class="primary-btn">Iniciar</button>
+              <button id="pausePomodoro" class="secondary-btn">Pausar</button>
+              <button id="resetPomodoro" class="danger-btn">Reiniciar</button>
+            </div>
+          </article>
+        </div>
+
+        <article class="panel">
+          <div class="panel-header">
+            <h3>Historial de estudio</h3>
+            <button id="clearSessions" class="text-btn danger-text">Borrar historial</button>
+          </div>
+          <div id="sessionList" class="list"></div>
+        </article>
+      </section>
+
+      <section id="reviews" class="page-section">
+        <div class="section-grid">
+          <article class="panel">
+            <h3>Agregar repaso</h3>
+            <form id="reviewForm" class="form-grid">
+              <label>Tema<input id="reviewTopic" required placeholder="Ej.: Leyes de Newton" /></label>
+              <label>Materia<select id="reviewSubject"></select></label>
+              <label>Fecha del próximo repaso<input id="reviewDate" type="date" required /></label>
+              <label>Dificultad
+                <select id="reviewDifficulty">
+                  <option value="fácil">Fácil</option>
+                  <option value="media" selected>Media</option>
+                  <option value="difícil">Difícil</option>
+                </select>
+              </label>
+              <button class="primary-btn full-width" type="submit">Programar repaso</button>
+            </form>
+          </article>
+          <article class="panel">
+            <h3>Repasos programados</h3>
+            <div id="reviewList" class="list"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="exams" class="page-section">
+        <div class="section-grid">
+          <article class="panel">
+            <h3>Agregar examen</h3>
+            <form id="examForm" class="form-grid">
+              <label>Nombre<input id="examName" required placeholder="Ej.: Ensayo PAES M1" /></label>
+              <label>Tipo
+                <select id="examType">
+                  <option>Colegio</option>
+                  <option>PAES</option>
+                  <option>SAT</option>
+                  <option>Preuniversitario</option>
+                  <option>Universidad</option>
+                </select>
+              </label>
+              <label>Materia<select id="examSubject"></select></label>
+              <label>Fecha<input id="examDate" type="date" required /></label>
+              <label>Preparación (%)<input id="examPreparation" type="number" min="0" max="100" value="0" /></label>
+              <label>Temario<input id="examTopics" placeholder="Temas principales" /></label>
+              <button class="primary-btn full-width" type="submit">Agregar examen</button>
+            </form>
+          </article>
+          <article class="panel">
+            <h3>Mis exámenes</h3>
+            <div id="examList" class="list"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="habits" class="page-section">
+        <div class="section-grid">
+          <article class="panel">
+            <h3>Nuevo hábito</h3>
+            <form id="habitForm" class="inline-form">
+              <input id="habitName" required placeholder="Ej.: Tomar agua" />
+              <button class="primary-btn" type="submit">Agregar</button>
+            </form>
+          </article>
+          <article class="panel">
+            <h3>Hábitos de hoy</h3>
+            <div id="habitList" class="habit-list"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="stats" class="page-section">
+        <div class="stats-grid">
+          <article class="stat-card"><span>📚</span><div><strong id="totalStudyTime">0 h</strong><small>Tiempo total</small></div></article>
+          <article class="stat-card"><span>📈</span><div><strong id="weeklyStudyTime">0 min</strong><small>Últimos 7 días</small></div></article>
+          <article class="stat-card"><span>🏆</span><div><strong id="bestSubject">—</strong><small>Materia más estudiada</small></div></article>
+          <article class="stat-card"><span>🧠</span><div><strong id="sessionCount">0</strong><small>Sesiones registradas</small></div></article>
+        </div>
+        <article class="panel">
+          <h3>Progreso por materia</h3>
+          <div id="statsSubjectBars" class="bars"></div>
+        </article>
+      </section>
+
+      <section id="settings" class="page-section">
+        <div class="section-grid">
+          <article class="panel">
+            <h3>Perfil</h3>
+            <form id="profileForm" class="form-grid">
+              <label>Nombre<input id="profileName" placeholder="Tu nombre" /></label>
+              <label>Meta diaria de estudio (min)<input id="dailyGoal" type="number" min="10" value="120" /></label>
+              <button class="primary-btn full-width" type="submit">Guardar configuración</button>
+            </form>
+          </article>
+
+          <article class="panel">
+            <h3>Datos y respaldo</h3>
+            <div class="settings-actions">
+              <button id="exportData" class="secondary-btn">Exportar datos</button>
+              <label class="secondary-btn file-label">Importar datos<input id="importData" type="file" accept=".json" hidden /></label>
+              <button id="enableNotifications" class="secondary-btn">Activar notificaciones</button>
+              <button id="resetApp" class="danger-btn">Restablecer aplicación</button>
+            </div>
+            <p class="muted">Los datos se guardan en este dispositivo mediante localStorage.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast"></div>
+  <script src="script.js"></script>
+</body>
+</html>
