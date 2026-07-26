@@ -2,7 +2,7 @@ const STORAGE_KEY = "blackHoldDataV1";
 
 const defaultData = {
   profile: {
-    name: "Nicolás",
+    name: "Nahiara",
     dailyGoal: 120,
     darkMode: false
   },
@@ -31,9 +31,7 @@ const defaultData = {
   ],
 
   tasks: [],
-
   exams: [],
-
   reviews: [],
 
   habits: [
@@ -70,10 +68,7 @@ let pomodoroIsBreak = false;
 let pomodoroRunning = false;
 
 const $ = (selector) => document.querySelector(selector);
-
-const $$ = (selector) => [
-  ...document.querySelectorAll(selector)
-];
+const $$ = (selector) => [...document.querySelectorAll(selector)];
 
 function loadData() {
   const saved = localStorage.getItem(STORAGE_KEY);
@@ -95,17 +90,12 @@ function loadData() {
     };
   } catch (error) {
     console.error("No se pudieron cargar los datos:", error);
-
     return structuredClone(defaultData);
   }
 }
 
 function saveData() {
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify(data)
-  );
-
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   renderAll();
 }
 
@@ -114,9 +104,7 @@ function formatDate(dateString) {
     return "Sin fecha";
   }
 
-  return new Date(
-    `${dateString}T12:00:00`
-  ).toLocaleDateString("es-CL", {
+  return new Date(`${dateString}T12:00:00`).toLocaleDateString("es-CL", {
     day: "2-digit",
     month: "short",
     year: "numeric"
@@ -124,9 +112,7 @@ function formatDate(dateString) {
 }
 
 function todayKey() {
-  return new Date()
-    .toISOString()
-    .slice(0, 10);
+  return new Date().toISOString().slice(0, 10);
 }
 
 function minutesToText(minutes) {
@@ -147,6 +133,10 @@ function minutesToText(minutes) {
 function showToast(message) {
   const toast = $("#toast");
 
+  if (!toast) {
+    return;
+  }
+
   toast.textContent = message;
   toast.classList.add("show");
 
@@ -164,10 +154,7 @@ function emptyState(text) {
 }
 
 function getSubjectName(subjectId) {
-  const subject = data.subjects.find(
-    (item) => item.id === subjectId
-  );
-
+  const subject = data.subjects.find((item) => item.id === subjectId);
   return subject?.name || "Sin materia";
 }
 
@@ -176,33 +163,21 @@ function getTodayMinutes() {
 
   return data.sessions
     .filter((session) => session.date === today)
-    .reduce(
-      (sum, session) => sum + session.minutes,
-      0
-    );
+    .reduce((sum, session) => sum + session.minutes, 0);
 }
 
 function getMinutesSince(days) {
   const limit = new Date();
 
-  limit.setDate(
-    limit.getDate() - days + 1
-  );
-
+  limit.setDate(limit.getDate() - days + 1);
   limit.setHours(0, 0, 0, 0);
 
   return data.sessions
     .filter((session) => {
-      const sessionDate = new Date(
-        `${session.date}T12:00:00`
-      );
-
+      const sessionDate = new Date(`${session.date}T12:00:00`);
       return sessionDate >= limit;
     })
-    .reduce(
-      (sum, session) => sum + session.minutes,
-      0
-    );
+    .reduce((sum, session) => sum + session.minutes, 0);
 }
 
 function calculateStreak() {
@@ -213,29 +188,19 @@ function calculateStreak() {
   );
 
   let streak = 0;
-
   const cursor = new Date();
 
   while (true) {
-    const key = cursor
-      .toISOString()
-      .slice(0, 10);
+    const key = cursor.toISOString().slice(0, 10);
 
     if (activeDates.has(key)) {
       streak += 1;
-
-      cursor.setDate(
-        cursor.getDate() - 1
-      );
+      cursor.setDate(cursor.getDate() - 1);
     } else {
       if (streak === 0) {
-        cursor.setDate(
-          cursor.getDate() - 1
-        );
+        cursor.setDate(cursor.getDate() - 1);
 
-        const yesterday = cursor
-          .toISOString()
-          .slice(0, 10);
+        const yesterday = cursor.toISOString().slice(0, 10);
 
         if (activeDates.has(yesterday)) {
           continue;
@@ -251,17 +216,11 @@ function calculateStreak() {
 
 function navigateTo(sectionId) {
   $$(".page-section").forEach((section) => {
-    section.classList.toggle(
-      "active",
-      section.id === sectionId
-    );
+    section.classList.toggle("active", section.id === sectionId);
   });
 
   $$(".nav-link").forEach((button) => {
-    button.classList.toggle(
-      "active",
-      button.dataset.section === sectionId
-    );
+    button.classList.toggle("active", button.dataset.section === sectionId);
   });
 
   const titles = {
@@ -276,10 +235,13 @@ function navigateTo(sectionId) {
     settings: "Configuración"
   };
 
-  $("#pageTitle").textContent =
-    titles[sectionId] || "Black Hold";
+  if ($("#pageTitle")) {
+    $("#pageTitle").textContent = titles[sectionId] || "Black Hold";
+  }
 
-  $("#sidebar").classList.remove("open");
+  if ($("#sidebar")) {
+    $("#sidebar").classList.remove("open");
+  }
 
   window.scrollTo({
     top: 0,
@@ -307,6 +269,11 @@ function populateSubjectSelects() {
 
   selectIds.forEach((id) => {
     const element = $(id);
+
+    if (!element) {
+      return;
+    }
+
     const current = element.value;
 
     element.innerHTML =
@@ -317,9 +284,7 @@ function populateSubjectSelects() {
         </option>
       `;
 
-    const exists = [
-      ...element.options
-    ].some(
+    const exists = [...element.options].some(
       (option) => option.value === current
     );
 
@@ -338,48 +303,53 @@ function renderDashboard() {
   );
 
   const progress = Math.min(
-    Math.round(
-      (todayMinutes / dailyGoal) * 100
-    ),
+    Math.round((todayMinutes / dailyGoal) * 100),
     100
   );
 
   const streak = calculateStreak();
 
-  $("#welcomeTitle").textContent =
-    `Hola, ${data.profile.name || "estudiante"} 👋`;
+  if ($("#welcomeTitle")) {
+    $("#welcomeTitle").textContent =
+      `Hola, ${data.profile.name || "Nahiara"} 👋`;
+  }
 
-  $("#todayMinutes").textContent =
-    minutesToText(todayMinutes);
+  if ($("#todayMinutes")) {
+    $("#todayMinutes").textContent = minutesToText(todayMinutes);
+  }
 
-  $("#completedTasks").textContent =
-    data.tasks.filter(
-      (task) => task.done
-    ).length;
+  if ($("#completedTasks")) {
+    $("#completedTasks").textContent =
+      data.tasks.filter((task) => task.done).length;
+  }
 
-  $("#upcomingExamCount").textContent =
-    data.exams.filter((exam) => {
-      const examDate = new Date(
-        `${exam.date}T23:59:59`
-      );
+  if ($("#upcomingExamCount")) {
+    $("#upcomingExamCount").textContent =
+      data.exams.filter((exam) => {
+        const examDate = new Date(`${exam.date}T23:59:59`);
+        return examDate >= new Date();
+      }).length;
+  }
 
-      return examDate >= new Date();
-    }).length;
+  if ($("#dashboardStreak")) {
+    $("#dashboardStreak").textContent = `${streak} días`;
+  }
 
-  $("#dashboardStreak").textContent =
-    `${streak} días`;
+  if ($("#streakText")) {
+    $("#streakText").textContent = `🔥 Racha: ${streak} días`;
+  }
 
-  $("#streakText").textContent =
-    `🔥 Racha: ${streak} días`;
+  if ($("#dailyProgressValue")) {
+    $("#dailyProgressValue").textContent = `${progress}%`;
+  }
 
-  $("#dailyProgressValue").textContent =
-    `${progress}%`;
-
-  $("#dailyProgressRing").style.background =
-    `conic-gradient(
-      var(--primary) ${progress * 3.6}deg,
-      var(--surface-2) ${progress * 3.6}deg
-    )`;
+  if ($("#dailyProgressRing")) {
+    $("#dailyProgressRing").style.background =
+      `conic-gradient(
+        var(--primary) ${progress * 3.6}deg,
+        var(--surface-2) ${progress * 3.6}deg
+      )`;
+  }
 
   const motivations = [
     "Haz hoy lo que tu futuro agradecerá.",
@@ -389,110 +359,89 @@ function renderDashboard() {
     "No necesitas hacerlo perfecto; necesitas avanzar."
   ];
 
-  $("#motivationText").textContent =
-    motivations[
-      new Date().getDate() %
-      motivations.length
-    ];
-
-  const pendingTasks = [
-    ...data.tasks
-  ]
-    .filter((task) => !task.done)
-    .sort(
-      (a, b) =>
-        a.date.localeCompare(b.date)
-    )
-    .slice(0, 5);
-
-  if (pendingTasks.length > 0) {
-    $("#dashboardTasks").innerHTML =
-      pendingTasks
-        .map((task) => {
-          return `
-            <div class="list-item">
-              <div class="list-item-main">
-                <strong>
-                  ${escapeHtml(task.title)}
-                </strong>
-
-                <small>
-                  ${getSubjectName(task.subjectId)}
-                  ·
-                  ${formatDate(task.date)}
-                </small>
-              </div>
-
-              <span class="badge ${task.priority}">
-                ${task.priority}
-              </span>
-            </div>
-          `;
-        })
-        .join("");
-  } else {
-    $("#dashboardTasks").innerHTML =
-      emptyState(
-        "No tienes tareas pendientes."
-      );
+  if ($("#motivationText")) {
+    $("#motivationText").textContent =
+      motivations[new Date().getDate() % motivations.length];
   }
 
-  const nextExams = [
-    ...data.exams
-  ]
-    .filter((exam) => {
-      const examDate = new Date(
-        `${exam.date}T23:59:59`
-      );
-
-      return examDate >= new Date();
-    })
-    .sort(
-      (a, b) =>
-        a.date.localeCompare(b.date)
-    )
+  const pendingTasks = [...data.tasks]
+    .filter((task) => !task.done)
+    .sort((a, b) => a.date.localeCompare(b.date))
     .slice(0, 5);
 
-  if (nextExams.length > 0) {
-    $("#dashboardExams").innerHTML =
-      nextExams
-        .map((exam) => {
-          return `
-            <div class="list-item">
-              <div class="list-item-main">
-                <strong>
-                  ${escapeHtml(exam.name)}
-                </strong>
+  if ($("#dashboardTasks")) {
+    if (pendingTasks.length > 0) {
+      $("#dashboardTasks").innerHTML =
+        pendingTasks
+          .map((task) => {
+            return `
+              <div class="list-item">
+                <div class="list-item-main">
+                  <strong>${escapeHtml(task.title)}</strong>
 
-                <small>
-                  ${escapeHtml(exam.type)}
-                  ·
-                  ${formatDate(exam.date)}
-                </small>
+                  <small>
+                    ${getSubjectName(task.subjectId)}
+                    ·
+                    ${formatDate(task.date)}
+                  </small>
+                </div>
 
-                <span class="badge">
-                  ${exam.preparation}% preparado
+                <span class="badge ${task.priority}">
+                  ${task.priority}
                 </span>
               </div>
-            </div>
-          `;
-        })
-        .join("");
-  } else {
-    $("#dashboardExams").innerHTML =
-      emptyState(
-        "No hay exámenes próximos."
-      );
+            `;
+          })
+          .join("");
+    } else {
+      $("#dashboardTasks").innerHTML =
+        emptyState("No tienes tareas pendientes.");
+    }
   }
 
-  renderSubjectBars(
-    "#dashboardSubjectBars",
-    7
-  );
+  const nextExams = [...data.exams]
+    .filter((exam) => {
+      const examDate = new Date(`${exam.date}T23:59:59`);
+      return examDate >= new Date();
+    })
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(0, 5);
+
+  if ($("#dashboardExams")) {
+    if (nextExams.length > 0) {
+      $("#dashboardExams").innerHTML =
+        nextExams
+          .map((exam) => {
+            return `
+              <div class="list-item">
+                <div class="list-item-main">
+                  <strong>${escapeHtml(exam.name)}</strong>
+
+                  <small>
+                    ${escapeHtml(exam.type)}
+                    ·
+                    ${formatDate(exam.date)}
+                  </small>
+
+                  <span class="badge">
+                    ${exam.preparation}% preparado
+                  </span>
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+    } else {
+      $("#dashboardExams").innerHTML =
+        emptyState("No hay exámenes próximos.");
+    }
+  }
+
+  renderSubjectBars("#dashboardSubjectBars", 7);
 }
 
 function renderTasks() {
-  const filter = $("#taskFilter").value;
+  const filter = $("#taskFilter")?.value || "all";
 
   const filtered = data.tasks
     .filter((task) => {
@@ -506,17 +455,15 @@ function renderTasks() {
 
       return !task.done;
     })
-    .sort(
-      (a, b) =>
-        a.date.localeCompare(b.date)
-    );
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  if (!$("#taskList")) {
+    return;
+  }
 
   if (filtered.length === 0) {
     $("#taskList").innerHTML =
-      emptyState(
-        "No hay tareas en esta categoría."
-      );
-
+      emptyState("No hay tareas en esta categoría.");
     return;
   }
 
@@ -526,9 +473,7 @@ function renderTasks() {
         return `
           <div class="list-item ${task.done ? "done" : ""}">
             <div class="list-item-main">
-              <strong>
-                ${escapeHtml(task.title)}
-              </strong>
+              <strong>${escapeHtml(task.title)}</strong>
 
               <small>
                 ${getSubjectName(task.subjectId)}
@@ -565,60 +510,43 @@ function renderTasks() {
 }
 
 function renderSubjects() {
-  const weeklyBySubject =
-    getMinutesBySubject(7);
+  const weeklyBySubject = getMinutesBySubject(7);
+
+  if (!$("#subjectGrid")) {
+    return;
+  }
 
   if (data.subjects.length === 0) {
     $("#subjectGrid").innerHTML =
-      emptyState(
-        "Agrega tu primera materia."
-      );
-
+      emptyState("Agrega tu primera materia.");
     return;
   }
 
   $("#subjectGrid").innerHTML =
     data.subjects
       .map((subject) => {
-        const studied =
-          weeklyBySubject[subject.id] || 0;
-
-        const goal =
-          Number(subject.weeklyGoal) || 1;
+        const studied = weeklyBySubject[subject.id] || 0;
+        const goal = Number(subject.weeklyGoal) || 1;
 
         const progress = Math.min(
-          Math.round(
-            (studied / goal) * 100
-          ),
+          Math.round((studied / goal) * 100),
           100
         );
 
         return `
           <div class="subject-card">
-            <h4>
-              ${escapeHtml(subject.name)}
-            </h4>
+            <h4>${escapeHtml(subject.name)}</h4>
 
-            <p>
-              ${minutesToText(studied)}
-              esta semana
-            </p>
+            <p>${minutesToText(studied)} esta semana</p>
 
-            <p>
-              Meta:
-              ${minutesToText(goal)}
-            </p>
+            <p>Meta: ${minutesToText(goal)}</p>
 
             <div class="progress-bar">
-              <span
-                style="width: ${progress}%"
-              ></span>
+              <span style="width: ${progress}%"></span>
             </div>
 
             <div class="item-actions">
-              <span class="badge">
-                ${progress}%
-              </span>
+              <span class="badge">${progress}%</span>
 
               <button
                 class="mini-btn"
@@ -634,19 +562,17 @@ function renderSubjects() {
 }
 
 function renderSessions() {
-  const sessions = [
-    ...data.sessions
-  ].sort(
-    (a, b) =>
-      b.createdAt - a.createdAt
+  const sessions = [...data.sessions].sort(
+    (a, b) => b.createdAt - a.createdAt
   );
+
+  if (!$("#sessionList")) {
+    return;
+  }
 
   if (sessions.length === 0) {
     $("#sessionList").innerHTML =
-      emptyState(
-        "Aún no registras sesiones de estudio."
-      );
-
+      emptyState("Aún no registras sesiones de estudio.");
     return;
   }
 
@@ -657,27 +583,18 @@ function renderSessions() {
           <div class="list-item">
             <div class="list-item-main">
               <strong>
-                ${escapeHtml(
-                  getSubjectName(
-                    session.subjectId
-                  )
-                )}
+                ${escapeHtml(getSubjectName(session.subjectId))}
               </strong>
 
               <small>
-                ${escapeHtml(
-                  session.topic ||
-                  "Sesión de estudio"
-                )}
+                ${escapeHtml(session.topic || "Sesión de estudio")}
                 ·
                 ${formatDate(session.date)}
               </small>
             </div>
 
             <span class="badge">
-              ${minutesToText(
-                session.minutes
-              )}
+              ${minutesToText(session.minutes)}
             </span>
           </div>
         `;
@@ -686,19 +603,17 @@ function renderSessions() {
 }
 
 function renderReviews() {
-  const reviews = [
-    ...data.reviews
-  ].sort(
-    (a, b) =>
-      a.date.localeCompare(b.date)
+  const reviews = [...data.reviews].sort(
+    (a, b) => a.date.localeCompare(b.date)
   );
+
+  if (!$("#reviewList")) {
+    return;
+  }
 
   if (reviews.length === 0) {
     $("#reviewList").innerHTML =
-      emptyState(
-        "No tienes repasos programados."
-      );
-
+      emptyState("No tienes repasos programados.");
     return;
   }
 
@@ -708,22 +623,16 @@ function renderReviews() {
         return `
           <div class="list-item">
             <div class="list-item-main">
-              <strong>
-                ${escapeHtml(review.topic)}
-              </strong>
+              <strong>${escapeHtml(review.topic)}</strong>
 
               <small>
-                ${getSubjectName(
-                  review.subjectId
-                )}
+                ${getSubjectName(review.subjectId)}
                 ·
                 ${formatDate(review.date)}
               </small>
 
               <span class="badge">
-                ${escapeHtml(
-                  review.difficulty
-                )}
+                ${escapeHtml(review.difficulty)}
               </span>
             </div>
 
@@ -749,32 +658,27 @@ function renderReviews() {
 }
 
 function renderExams() {
-  const exams = [
-    ...data.exams
-  ].sort(
-    (a, b) =>
-      a.date.localeCompare(b.date)
+  const exams = [...data.exams].sort(
+    (a, b) => a.date.localeCompare(b.date)
   );
+
+  if (!$("#examList")) {
+    return;
+  }
 
   if (exams.length === 0) {
     $("#examList").innerHTML =
-      emptyState(
-        "No has agregado exámenes."
-      );
-
+      emptyState("No has agregado exámenes.");
     return;
   }
 
   $("#examList").innerHTML =
     exams
       .map((exam) => {
-        const examDate = new Date(
-          `${exam.date}T12:00:00`
-        );
+        const examDate = new Date(`${exam.date}T12:00:00`);
 
         const days = Math.ceil(
-          (examDate - new Date()) /
-          86400000
+          (examDate - new Date()) / 86400000
         );
 
         const daysText =
@@ -785,33 +689,24 @@ function renderExams() {
         return `
           <div class="list-item">
             <div class="list-item-main">
-              <strong>
-                ${escapeHtml(exam.name)}
-              </strong>
+              <strong>${escapeHtml(exam.name)}</strong>
 
               <small>
                 ${escapeHtml(exam.type)}
                 ·
-                ${getSubjectName(
-                  exam.subjectId
-                )}
+                ${getSubjectName(exam.subjectId)}
                 ·
                 ${formatDate(exam.date)}
               </small>
 
               <small>
-                ${escapeHtml(
-                  exam.topics ||
-                  "Sin temario"
-                )}
+                ${escapeHtml(exam.topics || "Sin temario")}
                 ·
                 ${daysText}
               </small>
 
               <div class="progress-bar">
-                <span
-                  style="width: ${exam.preparation}%"
-                ></span>
+                <span style="width: ${exam.preparation}%"></span>
               </div>
             </div>
 
@@ -839,20 +734,20 @@ function renderExams() {
 function renderHabits() {
   const today = todayKey();
 
+  if (!$("#habitList")) {
+    return;
+  }
+
   if (data.habits.length === 0) {
     $("#habitList").innerHTML =
-      emptyState(
-        "Agrega un hábito para comenzar."
-      );
-
+      emptyState("Agrega un hábito para comenzar.");
     return;
   }
 
   $("#habitList").innerHTML =
     data.habits
       .map((habit) => {
-        const checked =
-          habit.dates.includes(today);
+        const checked = habit.dates.includes(today);
 
         return `
           <div class="habit-item">
@@ -863,9 +758,7 @@ function renderHabits() {
                 onchange="toggleHabit('${habit.id}')"
               >
 
-              <span>
-                ${escapeHtml(habit.name)}
-              </span>
+              <span>${escapeHtml(habit.name)}</span>
             </label>
 
             <button
@@ -886,57 +779,37 @@ function getMinutesBySubject(days = null) {
   if (days) {
     const limit = new Date();
 
-    limit.setDate(
-      limit.getDate() - days + 1
-    );
-
+    limit.setDate(limit.getDate() - days + 1);
     limit.setHours(0, 0, 0, 0);
 
-    sessions = sessions.filter(
-      (session) => {
-        const sessionDate = new Date(
-          `${session.date}T12:00:00`
-        );
-
-        return sessionDate >= limit;
-      }
-    );
+    sessions = sessions.filter((session) => {
+      const sessionDate = new Date(`${session.date}T12:00:00`);
+      return sessionDate >= limit;
+    });
   }
 
-  return sessions.reduce(
-    (accumulator, session) => {
-      accumulator[session.subjectId] =
-        (
-          accumulator[
-            session.subjectId
-          ] || 0
-        ) + session.minutes;
+  return sessions.reduce((accumulator, session) => {
+    accumulator[session.subjectId] =
+      (accumulator[session.subjectId] || 0) + session.minutes;
 
-      return accumulator;
-    },
-    {}
-  );
+    return accumulator;
+  }, {});
 }
 
-function renderSubjectBars(
-  target,
-  days = null
-) {
-  const totals =
-    getMinutesBySubject(days);
+function renderSubjectBars(target, days = null) {
+  const container = $(target);
 
-  const values =
-    Object.values(totals);
+  if (!container) {
+    return;
+  }
 
-  const max = Math.max(
-    ...values,
-    1
-  );
+  const totals = getMinutesBySubject(days);
+  const values = Object.values(totals);
+  const max = Math.max(...values, 1);
 
   const rows = data.subjects
     .map((subject) => {
-      const minutes =
-        totals[subject.id] || 0;
+      const minutes = totals[subject.id] || 0;
 
       const width = Math.round(
         (minutes / max) * 100
@@ -944,9 +817,7 @@ function renderSubjectBars(
 
       return `
         <div class="bar-row">
-          <strong>
-            ${escapeHtml(subject.name)}
-          </strong>
+          <strong>${escapeHtml(subject.name)}</strong>
 
           <div class="bar-track">
             <div
@@ -955,77 +826,69 @@ function renderSubjectBars(
             ></div>
           </div>
 
-          <span>
-            ${minutesToText(minutes)}
-          </span>
+          <span>${minutesToText(minutes)}</span>
         </div>
       `;
     })
     .join("");
 
-  $(target).innerHTML =
-    rows ||
-    emptyState(
-      "No hay datos todavía."
-    );
+  container.innerHTML =
+    rows || emptyState("No hay datos todavía.");
 }
 
 function renderStats() {
-  const total =
-    data.sessions.reduce(
-      (sum, session) =>
-        sum + session.minutes,
-      0
-    );
-
-  const weekly =
-    getMinutesSince(7);
-
-  const totals =
-    getMinutesBySubject();
-
-  const bestId =
-    Object.keys(totals)
-      .sort(
-        (a, b) =>
-          totals[b] - totals[a]
-      )[0];
-
-  $("#totalStudyTime").textContent =
-    minutesToText(total);
-
-  $("#weeklyStudyTime").textContent =
-    minutesToText(weekly);
-
-  $("#bestSubject").textContent =
-    bestId
-      ? getSubjectName(bestId)
-      : "—";
-
-  $("#sessionCount").textContent =
-    data.sessions.length;
-
-  renderSubjectBars(
-    "#statsSubjectBars"
+  const total = data.sessions.reduce(
+    (sum, session) => sum + session.minutes,
+    0
   );
+
+  const weekly = getMinutesSince(7);
+  const totals = getMinutesBySubject();
+
+  const bestId = Object.keys(totals).sort(
+    (a, b) => totals[b] - totals[a]
+  )[0];
+
+  if ($("#totalStudyTime")) {
+    $("#totalStudyTime").textContent = minutesToText(total);
+  }
+
+  if ($("#weeklyStudyTime")) {
+    $("#weeklyStudyTime").textContent = minutesToText(weekly);
+  }
+
+  if ($("#bestSubject")) {
+    $("#bestSubject").textContent =
+      bestId ? getSubjectName(bestId) : "—";
+  }
+
+  if ($("#sessionCount")) {
+    $("#sessionCount").textContent = data.sessions.length;
+  }
+
+  renderSubjectBars("#statsSubjectBars");
 }
 
 function renderSettings() {
-  $("#profileName").value =
-    data.profile.name || "";
+  if ($("#profileName")) {
+    $("#profileName").value = data.profile.name || "Nahiara";
+  }
 
-  $("#dailyGoal").value =
-    data.profile.dailyGoal || 120;
+  if ($("#dailyGoal")) {
+    $("#dailyGoal").value = data.profile.dailyGoal || 120;
+  }
 
   document.body.classList.toggle(
     "dark",
     data.profile.darkMode
   );
 
-  $("#themeToggle").textContent =
-    data.profile.darkMode
-      ? "☀️ Modo claro"
-      : "🌙 Modo oscuro";
+  if ($("#themeToggle")) {
+    $("#themeToggle").textContent =
+      data.profile.darkMode
+        ? "☀️ Modo claro"
+        : "🌙 Modo oscuro";
+  }
 }
 
 function renderAll() {
@@ -1051,63 +914,43 @@ function escapeHtml(value) {
 }
 
 window.toggleTask = function (id) {
-  const task = data.tasks.find(
-    (item) => item.id === id
-  );
+  const task = data.tasks.find((item) => item.id === id);
 
   if (!task) {
     return;
   }
 
   task.done = !task.done;
-
   saveData();
 };
 
 window.deleteTask = function (id) {
-  data.tasks = data.tasks.filter(
-    (task) => task.id !== id
-  );
-
+  data.tasks = data.tasks.filter((task) => task.id !== id);
   saveData();
 };
 
 window.deleteSubject = function (id) {
   const used =
-    data.tasks.some(
-      (item) =>
-        item.subjectId === id
-    ) ||
-    data.exams.some(
-      (item) =>
-        item.subjectId === id
-    ) ||
-    data.sessions.some(
-      (item) =>
-        item.subjectId === id
-    );
+    data.tasks.some((item) => item.subjectId === id) ||
+    data.exams.some((item) => item.subjectId === id) ||
+    data.sessions.some((item) => item.subjectId === id);
 
   if (used) {
     showToast(
       "No puedes borrar una materia que ya tiene datos asociados."
     );
-
     return;
   }
 
-  data.subjects =
-    data.subjects.filter(
-      (subject) =>
-        subject.id !== id
-    );
+  data.subjects = data.subjects.filter(
+    (subject) => subject.id !== id
+  );
 
   saveData();
 };
 
 window.completeReview = function (id) {
-  const review = data.reviews.find(
-    (item) => item.id === id
-  );
+  const review = data.reviews.find((item) => item.id === id);
 
   if (!review) {
     return;
@@ -1115,49 +958,34 @@ window.completeReview = function (id) {
 
   let days = 5;
 
-  if (
-    review.difficulty === "difícil"
-  ) {
+  if (review.difficulty === "difícil") {
     days = 2;
   }
 
-  if (
-    review.difficulty === "fácil"
-  ) {
+  if (review.difficulty === "fácil") {
     days = 10;
   }
 
   const next = new Date();
+  next.setDate(next.getDate() + days);
 
-  next.setDate(
-    next.getDate() + days
-  );
-
-  review.date = next
-    .toISOString()
-    .slice(0, 10);
+  review.date = next.toISOString().slice(0, 10);
 
   saveData();
 
-  showToast(
-    `Próximo repaso programado en ${days} días.`
-  );
+  showToast(`Próximo repaso programado en ${days} días.`);
 };
 
 window.deleteReview = function (id) {
-  data.reviews =
-    data.reviews.filter(
-      (review) =>
-        review.id !== id
-    );
+  data.reviews = data.reviews.filter(
+    (review) => review.id !== id
+  );
 
   saveData();
 };
 
 window.increaseExam = function (id) {
-  const exam = data.exams.find(
-    (item) => item.id === id
-  );
+  const exam = data.exams.find((item) => item.id === id);
 
   if (!exam) {
     return;
@@ -1172,19 +1000,12 @@ window.increaseExam = function (id) {
 };
 
 window.deleteExam = function (id) {
-  data.exams =
-    data.exams.filter(
-      (exam) =>
-        exam.id !== id
-    );
-
+  data.exams = data.exams.filter((exam) => exam.id !== id);
   saveData();
 };
 
 window.toggleHabit = function (id) {
-  const habit = data.habits.find(
-    (item) => item.id === id
-  );
+  const habit = data.habits.find((item) => item.id === id);
 
   if (!habit) {
     return;
@@ -1193,11 +1014,7 @@ window.toggleHabit = function (id) {
   const today = todayKey();
 
   if (habit.dates.includes(today)) {
-    habit.dates =
-      habit.dates.filter(
-        (date) =>
-          date !== today
-      );
+    habit.dates = habit.dates.filter((date) => date !== today);
   } else {
     habit.dates.push(today);
   }
@@ -1206,605 +1023,368 @@ window.toggleHabit = function (id) {
 };
 
 window.deleteHabit = function (id) {
-  data.habits =
-    data.habits.filter(
-      (habit) =>
-        habit.id !== id
-    );
-
+  data.habits = data.habits.filter((habit) => habit.id !== id);
   saveData();
 };
 
 function setupEvents() {
-  $$(".nav-link").forEach(
-    (button) => {
-      button.addEventListener(
-        "click",
-        () => {
-          navigateTo(
-            button.dataset.section
-          );
-        }
-      );
-    }
-  );
-
-  $$("[data-go]").forEach(
-    (button) => {
-      button.addEventListener(
-        "click",
-        () => {
-          navigateTo(
-            button.dataset.go
-          );
-        }
-      );
-    }
-  );
-
-  $("#menuBtn").addEventListener(
-    "click",
-    () => {
-      $("#sidebar").classList.toggle(
-        "open"
-      );
-    }
-  );
-
-  $("#quickStudyBtn").addEventListener(
-    "click",
-    () => {
-      navigateTo("study");
-    }
-  );
-
-  $("#taskForm").addEventListener(
-    "submit",
-    (event) => {
-      event.preventDefault();
-
-      const title =
-        $("#taskTitle").value.trim();
-
-      if (!title) {
-        showToast(
-          "Escribe el nombre de la tarea."
-        );
-
-        return;
-      }
-
-      data.tasks.push({
-        id: crypto.randomUUID(),
-        title,
-        subjectId:
-          $("#taskSubject").value,
-        date:
-          $("#taskDate").value,
-        priority:
-          $("#taskPriority").value,
-        done: false
-      });
-
-      event.target.reset();
-
-      $("#taskDate").value =
-        todayKey();
-
-      saveData();
-
-      showToast(
-        "Tarea agregada."
-      );
-    }
-  );
-
-  $("#taskFilter").addEventListener(
-    "change",
-    renderTasks
-  );
-
-  $("#subjectForm").addEventListener(
-    "submit",
-    (event) => {
-      event.preventDefault();
-
-      const name =
-        $("#subjectName").value.trim();
-
-      if (!name) {
-        showToast(
-          "Escribe el nombre de la materia."
-        );
-
-        return;
-      }
-
-      data.subjects.push({
-        id: crypto.randomUUID(),
-        name,
-        weeklyGoal:
-          Number(
-            $("#subjectGoal").value
-          ) || 300
-      });
-
-      event.target.reset();
-
-      $("#subjectGoal").value = 300;
-
-      saveData();
-
-      showToast(
-        "Materia agregada."
-      );
-    }
-  );
-
-  $("#reviewForm").addEventListener(
-    "submit",
-    (event) => {
-      event.preventDefault();
-
-      const topic =
-        $("#reviewTopic").value.trim();
-
-      if (!topic) {
-        showToast(
-          "Escribe el tema del repaso."
-        );
-
-        return;
-      }
-
-      data.reviews.push({
-        id: crypto.randomUUID(),
-        topic,
-        subjectId:
-          $("#reviewSubject").value,
-        date:
-          $("#reviewDate").value,
-        difficulty:
-          $("#reviewDifficulty").value
-      });
-
-      event.target.reset();
-
-      $("#reviewDate").value =
-        todayKey();
-
-      saveData();
-
-      showToast(
-        "Repaso programado."
-      );
-    }
-  );
-
-  $("#examForm").addEventListener(
-    "submit",
-    (event) => {
-      event.preventDefault();
-
-      const name =
-        $("#examName").value.trim();
-
-      if (!name) {
-        showToast(
-          "Escribe el nombre del examen."
-        );
-
-        return;
-      }
-
-      data.exams.push({
-        id: crypto.randomUUID(),
-        name,
-        type:
-          $("#examType").value,
-        subjectId:
-          $("#examSubject").value,
-        date:
-          $("#examDate").value,
-        preparation:
-          Number(
-            $("#examPreparation").value
-          ),
-        topics:
-          $("#examTopics").value.trim()
-      });
-
-      event.target.reset();
-
-      $("#examDate").value =
-        todayKey();
-
-      $("#examPreparation").value = 0;
-
-      saveData();
-
-      showToast(
-        "Examen agregado."
-      );
-    }
-  );
-
-  $("#habitForm").addEventListener(
-    "submit",
-    (event) => {
-      event.preventDefault();
-
-      const name =
-        $("#habitName").value.trim();
-
-      if (!name) {
-        showToast(
-          "Escribe el nombre del hábito."
-        );
-
-        return;
-      }
-
-      data.habits.push({
-        id: crypto.randomUUID(),
-        name,
-        dates: []
-      });
-
-      event.target.reset();
-
-      saveData();
-
-      showToast(
-        "Hábito agregado."
-      );
-    }
-  );
-
-  $("#profileForm").addEventListener(
-    "submit",
-    (event) => {
-      event.preventDefault();
-
-      data.profile.name =
-        $("#profileName").value.trim() ||
-        "Estudiante";
-
-      data.profile.dailyGoal =
-        Number(
-          $("#dailyGoal").value
-        ) || 120;
-
-      saveData();
-
-      showToast(
-        "Configuración guardada."
-      );
-    }
-  );
-
-  $("#themeToggle").addEventListener(
-    "click",
-    () => {
-      data.profile.darkMode =
-        !data.profile.darkMode;
-
-      saveData();
-    }
-  );
-
-  $("#startStopwatch").addEventListener(
-    "click",
-    () => {
-      if (stopwatchInterval) {
-        return;
-      }
-
-      stopwatchInterval =
-        setInterval(() => {
-          stopwatchSeconds += 1;
-
-          updateStopwatch();
-        }, 1000);
-    }
-  );
-
-  $("#pauseStopwatch").addEventListener(
-    "click",
-    () => {
-      clearInterval(
-        stopwatchInterval
-      );
-
-      stopwatchInterval = null;
-    }
-  );
-
-  $("#finishStopwatch").addEventListener(
-    "click",
-    () => {
-      clearInterval(
-        stopwatchInterval
-      );
-
-      stopwatchInterval = null;
-
-      if (
-        !$("#timerSubject").value
-      ) {
-        showToast(
-          "Crea una materia antes de guardar."
-        );
-
-        return;
-      }
-
-      if (stopwatchSeconds < 5) {
-        showToast(
-          "La sesión es demasiado corta."
-        );
-
-        return;
-      }
-
-      const minutes = Math.max(
-        1,
-        Math.round(
-          stopwatchSeconds / 60
-        )
-      );
-
-      data.sessions.push({
-        id: crypto.randomUUID(),
-        subjectId:
-          $("#timerSubject").value,
-        topic:
-          $("#timerTopic").value.trim(),
-        minutes,
-        date: todayKey(),
-        createdAt: Date.now()
-      });
-
-      stopwatchSeconds = 0;
-
-      $("#timerTopic").value = "";
-
-      updateStopwatch();
-
-      saveData();
-
-      showToast(
-        "Sesión guardada."
-      );
-    }
-  );
-
-  $$(".chip").forEach((chip) => {
-    chip.addEventListener(
-      "click",
-      () => {
-        $$(".chip").forEach(
-          (item) => {
-            item.classList.remove(
-              "active"
-            );
-          }
-        );
-
-        chip.classList.add(
-          "active"
-        );
-
-        pomodoroWorkMinutes =
-          Number(chip.dataset.work);
-
-        pomodoroBreakMinutes =
-          Number(chip.dataset.break);
-
-        pomodoroIsBreak = false;
-
-        pomodoroSeconds =
-          pomodoroWorkMinutes * 60;
-
-        updatePomodoro();
-      }
-    );
+  $$(".nav-link").forEach((button) => {
+    button.addEventListener("click", () => {
+      navigateTo(button.dataset.section);
+    });
   });
 
-  $("#startPomodoro").addEventListener(
-    "click",
-    startPomodoro
-  );
+  $$("[data-go]").forEach((button) => {
+    button.addEventListener("click", () => {
+      navigateTo(button.dataset.go);
+    });
+  });
 
-  $("#pausePomodoro").addEventListener(
-    "click",
-    () => {
-      clearInterval(
-        pomodoroInterval
-      );
+  $("#menuBtn")?.addEventListener("click", () => {
+    $("#sidebar")?.classList.toggle("open");
+  });
 
-      pomodoroInterval = null;
-      pomodoroRunning = false;
+  $("#quickStudyBtn")?.addEventListener("click", () => {
+    navigateTo("study");
+  });
+
+  $("#taskForm")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const title = $("#taskTitle").value.trim();
+
+    if (!title) {
+      showToast("Escribe el nombre de la tarea.");
+      return;
     }
-  );
 
-  $("#resetPomodoro").addEventListener(
-    "click",
-    () => {
-      clearInterval(
-        pomodoroInterval
-      );
+    data.tasks.push({
+      id: crypto.randomUUID(),
+      title,
+      subjectId: $("#taskSubject").value,
+      date: $("#taskDate").value,
+      priority: $("#taskPriority").value,
+      done: false
+    });
 
-      pomodoroInterval = null;
-      pomodoroRunning = false;
-      pomodoroIsBreak = false;
+    event.target.reset();
+    $("#taskDate").value = todayKey();
 
-      pomodoroSeconds =
-        pomodoroWorkMinutes * 60;
+    saveData();
+    showToast("Tarea agregada.");
+  });
 
-      updatePomodoro();
+  $("#taskFilter")?.addEventListener("change", renderTasks);
+
+  $("#subjectForm")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const name = $("#subjectName").value.trim();
+
+    if (!name) {
+      showToast("Escribe el nombre de la materia.");
+      return;
     }
-  );
 
-  $("#clearSessions").addEventListener(
-    "click",
-    () => {
-      const confirmed = confirm(
-        "¿Borrar todo el historial de estudio?"
-      );
+    data.subjects.push({
+      id: crypto.randomUUID(),
+      name,
+      weeklyGoal: Number($("#subjectGoal").value) || 300
+    });
 
-      if (!confirmed) {
-        return;
-      }
+    event.target.reset();
+    $("#subjectGoal").value = 300;
 
-      data.sessions = [];
+    saveData();
+    showToast("Materia agregada.");
+  });
 
-      saveData();
+  $("#reviewForm")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const topic = $("#reviewTopic").value.trim();
+
+    if (!topic) {
+      showToast("Escribe el tema del repaso.");
+      return;
     }
-  );
 
-  $("#exportData").addEventListener(
-    "click",
-    () => {
-      const content =
-        JSON.stringify(
-          data,
-          null,
-          2
-        );
+    data.reviews.push({
+      id: crypto.randomUUID(),
+      topic,
+      subjectId: $("#reviewSubject").value,
+      date: $("#reviewDate").value,
+      difficulty: $("#reviewDifficulty").value
+    });
 
-      const blob = new Blob(
-        [content],
-        {
-          type: "application/json"
-        }
-      );
+    event.target.reset();
+    $("#reviewDate").value = todayKey();
 
-      const url =
-        URL.createObjectURL(blob);
+    saveData();
+    showToast("Repaso programado.");
+  });
 
-      const link =
-        document.createElement("a");
+  $("#examForm")?.addEventListener("submit", (event) => {
+    event.preventDefault();
 
-      link.href = url;
+    const name = $("#examName").value.trim();
 
-      link.download =
-        `black-hold-backup-${todayKey()}.json`;
-
-      link.click();
-
-      URL.revokeObjectURL(url);
+    if (!name) {
+      showToast("Escribe el nombre del examen.");
+      return;
     }
-  );
 
-  $("#importData").addEventListener(
-    "change",
-    async (event) => {
-      const file =
-        event.target.files[0];
+    data.exams.push({
+      id: crypto.randomUUID(),
+      name,
+      type: $("#examType").value,
+      subjectId: $("#examSubject").value,
+      date: $("#examDate").value,
+      preparation: Number($("#examPreparation").value),
+      topics: $("#examTopics").value.trim()
+    });
 
-      if (!file) {
-        return;
-      }
+    event.target.reset();
 
-      try {
-        const content =
-          await file.text();
+    $("#examDate").value = todayKey();
+    $("#examPreparation").value = 0;
 
-        const parsed =
-          JSON.parse(content);
+    saveData();
+    showToast("Examen agregado.");
+  });
 
-        data = parsed;
+  $("#habitForm")?.addEventListener("submit", (event) => {
+    event.preventDefault();
 
-        saveData();
+    const name = $("#habitName").value.trim();
 
-        showToast(
-          "Datos importados correctamente."
-        );
-      } catch (error) {
-        console.error(error);
-
-        showToast(
-          "El archivo no es válido."
-        );
-      }
+    if (!name) {
+      showToast("Escribe el nombre del hábito.");
+      return;
     }
-  );
 
-  $("#enableNotifications")
-    .addEventListener(
-      "click",
-      async () => {
-        if (
-          !("Notification" in window)
-        ) {
-          showToast(
-            "Tu navegador no admite notificaciones."
-          );
+    data.habits.push({
+      id: crypto.randomUUID(),
+      name,
+      dates: []
+    });
 
-          return;
-        }
+    event.target.reset();
 
-        const permission =
-          await Notification
-            .requestPermission();
+    saveData();
+    showToast("Hábito agregado.");
+  });
 
-        if (
-          permission === "granted"
-        ) {
-          showToast(
-            "Notificaciones activadas."
-          );
-        } else {
-          showToast(
-            "Permiso no concedido."
-          );
-        }
-      }
+  $("#profileForm")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    data.profile.name =
+      $("#profileName").value.trim() || "Nahiara";
+
+    data.profile.dailyGoal =
+      Number($("#dailyGoal").value) || 120;
+
+    saveData();
+    showToast("Configuración guardada.");
+  });
+
+  $("#themeToggle")?.addEventListener("click", () => {
+    data.profile.darkMode = !data.profile.darkMode;
+    saveData();
+  });
+
+  $("#startStopwatch")?.addEventListener("click", () => {
+    if (stopwatchInterval) {
+      return;
+    }
+
+    stopwatchInterval = setInterval(() => {
+      stopwatchSeconds += 1;
+      updateStopwatch();
+    }, 1000);
+  });
+
+  $("#pauseStopwatch")?.addEventListener("click", () => {
+    clearInterval(stopwatchInterval);
+    stopwatchInterval = null;
+  });
+
+  $("#finishStopwatch")?.addEventListener("click", () => {
+    clearInterval(stopwatchInterval);
+    stopwatchInterval = null;
+
+    if (!$("#timerSubject").value) {
+      showToast("Crea una materia antes de guardar.");
+      return;
+    }
+
+    if (stopwatchSeconds < 5) {
+      showToast("La sesión es demasiado corta.");
+      return;
+    }
+
+    const minutes = Math.max(
+      1,
+      Math.round(stopwatchSeconds / 60)
     );
 
-  $("#resetApp").addEventListener(
-    "click",
-    () => {
-      const confirmed = confirm(
-        "Esto eliminará todos tus datos. ¿Continuar?"
-      );
+    data.sessions.push({
+      id: crypto.randomUUID(),
+      subjectId: $("#timerSubject").value,
+      topic: $("#timerTopic").value.trim(),
+      minutes,
+      date: todayKey(),
+      createdAt: Date.now()
+    });
 
-      if (!confirmed) {
+    stopwatchSeconds = 0;
+    $("#timerTopic").value = "";
+
+    updateStopwatch();
+    saveData();
+
+    showToast("Sesión guardada.");
+  });
+
+  $$(".chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      $$(".chip").forEach((item) => {
+        item.classList.remove("active");
+      });
+
+      chip.classList.add("active");
+
+      pomodoroWorkMinutes = Number(chip.dataset.work);
+      pomodoroBreakMinutes = Number(chip.dataset.break);
+      pomodoroIsBreak = false;
+      pomodoroSeconds = pomodoroWorkMinutes * 60;
+
+      updatePomodoro();
+    });
+  });
+
+  $("#startPomodoro")?.addEventListener("click", startPomodoro);
+
+  $("#pausePomodoro")?.addEventListener("click", () => {
+    clearInterval(pomodoroInterval);
+    pomodoroInterval = null;
+    pomodoroRunning = false;
+  });
+
+  $("#resetPomodoro")?.addEventListener("click", () => {
+    clearInterval(pomodoroInterval);
+
+    pomodoroInterval = null;
+    pomodoroRunning = false;
+    pomodoroIsBreak = false;
+    pomodoroSeconds = pomodoroWorkMinutes * 60;
+
+    updatePomodoro();
+  });
+
+  $("#clearSessions")?.addEventListener("click", () => {
+    const confirmed = confirm(
+      "¿Borrar todo el historial de estudio?"
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    data.sessions = [];
+    saveData();
+  });
+
+  $("#exportData")?.addEventListener("click", () => {
+    const content = JSON.stringify(data, null, 2);
+
+    const blob = new Blob([content], {
+      type: "application/json"
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `black-hold-backup-${todayKey()}.json`;
+    link.click();
+
+    URL.revokeObjectURL(url);
+  });
+
+  $("#importData")?.addEventListener("change", async (event) => {
+    const file = event.target.files[0];
+
+    if (!file) {
+      return;
+    }
+
+    try {
+      const content = await file.text();
+      const parsed = JSON.parse(content);
+
+      data = parsed;
+
+      saveData();
+      showToast("Datos importados correctamente.");
+    } catch (error) {
+      console.error(error);
+      showToast("El archivo no es válido.");
+    }
+  });
+
+  $("#enableNotifications")?.addEventListener(
+    "click",
+    async () => {
+      if (!("Notification" in window)) {
+        showToast("Tu navegador no admite notificaciones.");
         return;
       }
 
-      data =
-        structuredClone(
-          defaultData
-        );
+      const permission = await Notification.requestPermission();
 
-      saveData();
+      if (permission === "granted") {
+        showToast("Notificaciones activadas.");
+      } else {
+        showToast("Permiso no concedido.");
+      }
     }
   );
+
+  $("#resetApp")?.addEventListener("click", () => {
+    const confirmed = confirm(
+      "Esto eliminará todos tus datos. ¿Continuar?"
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    data = structuredClone(defaultData);
+    saveData();
+  });
 }
 
 function updateStopwatch() {
+  const display = $("#stopwatchDisplay");
+
+  if (!display) {
+    return;
+  }
+
   const hours = String(
-    Math.floor(
-      stopwatchSeconds / 3600
-    )
+    Math.floor(stopwatchSeconds / 3600)
   ).padStart(2, "0");
 
   const minutes = String(
-    Math.floor(
-      (
-        stopwatchSeconds % 3600
-      ) / 60
-    )
+    Math.floor((stopwatchSeconds % 3600) / 60)
   ).padStart(2, "0");
 
   const seconds = String(
     stopwatchSeconds % 60
   ).padStart(2, "0");
 
-  $("#stopwatchDisplay").textContent =
-    `${hours}:${minutes}:${seconds}`;
+  display.textContent = `${hours}:${minutes}:${seconds}`;
 }
 
 function startPomodoro() {
@@ -1814,72 +1394,64 @@ function startPomodoro() {
 
   pomodoroRunning = true;
 
-  pomodoroInterval =
-    setInterval(() => {
-      pomodoroSeconds -= 1;
+  pomodoroInterval = setInterval(() => {
+    pomodoroSeconds -= 1;
 
-      if (pomodoroSeconds <= 0) {
-        clearInterval(
-          pomodoroInterval
-        );
+    if (pomodoroSeconds <= 0) {
+      clearInterval(pomodoroInterval);
 
-        pomodoroInterval = null;
-        pomodoroRunning = false;
+      pomodoroInterval = null;
+      pomodoroRunning = false;
 
-        if (
-          !pomodoroIsBreak &&
-          $("#timerSubject").value
-        ) {
-          data.sessions.push({
-            id: crypto.randomUUID(),
-            subjectId:
-              $("#timerSubject").value,
-            topic:
-              $("#timerTopic").value.trim() ||
-              "Pomodoro",
-            minutes:
-              pomodoroWorkMinutes,
-            date: todayKey(),
-            createdAt: Date.now()
-          });
+      if (!pomodoroIsBreak && $("#timerSubject")?.value) {
+        data.sessions.push({
+          id: crypto.randomUUID(),
+          subjectId: $("#timerSubject").value,
+          topic: $("#timerTopic")?.value.trim() || "Pomodoro",
+          minutes: pomodoroWorkMinutes,
+          date: todayKey(),
+          createdAt: Date.now()
+        });
 
-          saveData();
-        }
-
-        pomodoroIsBreak =
-          !pomodoroIsBreak;
-
-        pomodoroSeconds =
-          (
-            pomodoroIsBreak
-              ? pomodoroBreakMinutes
-              : pomodoroWorkMinutes
-          ) * 60;
-
-        updatePomodoro();
-
-        notifyPomodoro();
-      } else {
-        updatePomodoro();
+        saveData();
       }
-    }, 1000);
+
+      pomodoroIsBreak = !pomodoroIsBreak;
+
+      pomodoroSeconds =
+        (
+          pomodoroIsBreak
+            ? pomodoroBreakMinutes
+            : pomodoroWorkMinutes
+        ) * 60;
+
+      updatePomodoro();
+      notifyPomodoro();
+    } else {
+      updatePomodoro();
+    }
+  }, 1000);
 }
 
 function updatePomodoro() {
+  const display = $("#pomodoroDisplay");
+  const mode = $("#pomodoroMode");
+
+  if (!display || !mode) {
+    return;
+  }
+
   const minutes = String(
-    Math.floor(
-      pomodoroSeconds / 60
-    )
+    Math.floor(pomodoroSeconds / 60)
   ).padStart(2, "0");
 
   const seconds = String(
     pomodoroSeconds % 60
   ).padStart(2, "0");
 
-  $("#pomodoroDisplay").textContent =
-    `${minutes}:${seconds}`;
+  display.textContent = `${minutes}:${seconds}`;
 
-  $("#pomodoroMode").textContent =
+  mode.textContent =
     pomodoroIsBreak
       ? "Tiempo de descanso"
       : "Tiempo de estudio";
@@ -1897,66 +1469,56 @@ function notifyPomodoro() {
     "Notification" in window &&
     Notification.permission === "granted"
   ) {
-    new Notification(
-      "Black Hold",
-      {
-        body: message
-      }
-    );
+    new Notification("Black Hold", {
+      body: message
+    });
   }
 }
 
 function setInitialDates() {
-  $("#taskDate").value =
-    todayKey();
+  if ($("#taskDate")) {
+    $("#taskDate").value = todayKey();
+  }
 
-  $("#reviewDate").value =
-    todayKey();
+  if ($("#reviewDate")) {
+    $("#reviewDate").value = todayKey();
+  }
 
-  $("#examDate").value =
-    todayKey();
+  if ($("#examDate")) {
+    $("#examDate").value = todayKey();
+  }
 }
 
 function initialize() {
   const now = new Date();
 
-  $("#todayLabel").textContent =
-    now.toLocaleDateString(
-      "es-CL",
-      {
+  if ($("#todayLabel")) {
+    $("#todayLabel").textContent =
+      now.toLocaleDateString("es-CL", {
         weekday: "long",
         day: "numeric",
         month: "long",
         year: "numeric"
-      }
-    );
+      });
+  }
 
   setInitialDates();
-
   setupEvents();
-
   renderAll();
-
   updateStopwatch();
-
   updatePomodoro();
 
-  if (
-    "serviceWorker" in navigator
-  ) {
-    window.addEventListener(
-      "load",
-      () => {
-        navigator.serviceWorker
-          .register("./sw.js")
-          .catch((error) => {
-            console.error(
-              "No se pudo registrar el Service Worker:",
-              error
-            );
-          });
-      }
-    );
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker
+        .register("./sw.js")
+        .catch((error) => {
+          console.error(
+            "No se pudo registrar el Service Worker:",
+            error
+          );
+        });
+    });
   }
 }
 
